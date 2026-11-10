@@ -1341,6 +1341,63 @@ test("jQuery.parseHTML", function() {
 	equal( jQuery.parseHTML("<td><td>")[ 1 ].parentNode.nodeType, 11, "parentNode should be documentFragment" );
 });
 
+test( "jQuery.parseHTML(<a href>) - gh-2965", function() {
+	expect( 1 );
+
+	var html = "<a href='test.html'></a>",
+		href = jQuery.parseHTML( html )[ 0 ].href;
+
+	ok( /\/test\.html$/.test( href ), "href is not lost after parsing anchor" );
+});
+
+if ( jQuery.support.createHTMLDocument ) {
+	asyncTest("jQuery.parseHTML", function() {
+		expect ( 1 );
+
+		Globals.register("parseHTMLError");
+
+		jQuery.globalEval("parseHTMLError = false;");
+		jQuery.parseHTML( "<img src=x onerror='parseHTMLError = true'>" );
+
+		window.setTimeout(function() {
+			start();
+			equal( window.parseHTMLError, false, "onerror eventhandler has not been called." );
+		}, 2000);
+	});
+
+	asyncTest( "jQuery.parseHTML - inline event handlers of parsed markup are not run (#11974)", function() {
+		expect( 4 );
+
+		Globals.register("parseHTMLDefault");
+		Globals.register("parseHTMLBoolean");
+		Globals.register("parseHTMLNull");
+		Globals.register("parseHTMLDocument");
+
+		jQuery.globalEval( "parseHTMLDefault = parseHTMLBoolean = parseHTMLNull = parseHTMLDocument = false;" );
+
+		// No context: nested markup goes through buildFragment
+		jQuery.parseHTML( "<div><img src=x onerror='parseHTMLDefault = true'></div>" );
+
+		// keepScripts passed in place of the context
+		jQuery.parseHTML( "<img src=x onerror='parseHTMLBoolean = true'>", true );
+
+		// Falsy context with explicit keepScripts
+		jQuery.parseHTML( "<p><img src=x onerror='parseHTMLNull = true'></p>", null, false );
+
+		// Control: an explicit document context keeps creating live elements,
+		// which shows the payload fires when parsed into the current document
+		jQuery.parseHTML( "<img src=x onerror='parseHTMLDocument = true'>", document );
+
+		window.setTimeout(function() {
+			start();
+			equal( window.parseHTMLDefault, false, "onerror not called for markup parsed without a context" );
+			equal( window.parseHTMLBoolean, false, "onerror not called when keepScripts is the second argument" );
+			equal( window.parseHTMLNull, false, "onerror not called for a null context" );
+			equal( window.parseHTMLDocument, true, "onerror called for markup parsed into the current document" );
+		}, 2000);
+	});
+}
+
 test("jQuery.parseJSON", function() {
 	expect( 20 );
 

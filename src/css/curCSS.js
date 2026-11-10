@@ -11,7 +11,15 @@ var getStyles, curCSS,
 
 if ( window.getComputedStyle ) {
 	getStyles = function( elem ) {
-		return elem.ownerDocument.defaultView.getComputedStyle( elem, null );
+		// Elements created by jQuery.parseHTML belong to a document without
+		// a defaultView (document.implementation.createHTMLDocument, gh-2866)
+		var view = elem.ownerDocument.defaultView;
+
+		if ( !view ) {
+			view = window;
+		}
+
+		return view.getComputedStyle( elem, null );
 	};
 
 	curCSS = function( elem, name, computed ) {

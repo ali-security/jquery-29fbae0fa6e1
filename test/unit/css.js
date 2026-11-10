@@ -1109,6 +1109,13 @@ test( "show() after hide() should always set display to initial value (#14750)",
 	equal( div.css( "display" ), "list-item", "should get last set display value" );
 });
 
+test( "css() and hide() work on elements created by jQuery.parseHTML (gh-2866)", 2, function() {
+	var span = jQuery( jQuery.parseHTML( "<span style='font-size: 12px'>x</span>" ) );
+
+	equal( span.css( "font-size" ), "12px", "css() returns the inline style" );
+	equal( span.hide().css( "display" ), "none", "hide() sets display to none" );
+});
+
 // Support: IE < 11, Safari < 7
 // We have to jump through the hoops here in order to test work with "order" CSS property,
 // that some browsers do not support. This test is not, strictly speaking, correct,
