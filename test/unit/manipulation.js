@@ -2460,7 +2460,17 @@ asyncTest( "Sanitized HTML doesn't get unsanitized", function() {
 			"<img alt=\"<x\" title=\"\" src=\"/><img src=url404 onerror=xss({id})>\">",
 			"<noscript/><img src=url404 onerror=xss({id})>",
 			"<noembed><noembed/><img src=url404 onerror=xss({id})>",
-			"<textarea><textarea/><img src=url404 onerror=xss({id})>"
+			"<textarea><textarea/><img src=url404 onerror=xss({id})>",
+
+			// <option>/<optgroup> markup must not be re-parsed inside a <select> wrapper
+			"<option><style></option></select><img src=url404 onerror=xss({id})></style>",
+
+			// Support: Chrome 135+
+			// Browsers with the relaxed <select> parser no longer drop <style> inside
+			// a <select>, but a nested <select> still closes the wrapper and moves
+			// the rest of the markup into foreign (SVG) content
+			"<option><select><svg></select><style><img src=url404 onerror=xss({id})></style>",
+			"<optgroup><select><svg></select><style><img src=url404 onerror=xss({id})></style>"
 		],
 
 		// Cover every way an HTML string gets parsed: the .html() innerHTML
